@@ -84,3 +84,5 @@ async function duplicateAllPages() {
     console.log(`복제 완료: ${getTitleText(page.properties.습관)}`);
   }
 }
+
+module.exports = duplicateAllPages;
