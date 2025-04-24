@@ -39,7 +39,7 @@ function getTitleText(titleProp) {
 
 // 새 페이지 생성용 프로퍼티 구성
 function buildNewProperties(original) {
-  const today = '2025-04-25';//new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
   const status = original.상태.select?.name;
   const confirm = status === 'Bad' ? true : false;
 
