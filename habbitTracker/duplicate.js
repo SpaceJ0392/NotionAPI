@@ -1,17 +1,24 @@
 require('dotenv').config();
 const { Client } = require('@notionhq/client');
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const databaseId = process.env.DATABASE_ID;
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const getYesterdayKST = () => {
+  return dayjs().tz('Asia/Seoul').subtract(1, 'day').format('YYYY-MM-DD');
+};
 
 // 모든 페이지 불러오기
 async function getAllPages() {
   let results = [];
   let cursor;
-
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const ymd = yesterday.toISOString().split('T')[0]; // 'YYYY-MM-DD'ㄴ
+  const ymd = getYesterdayKST(); // 'YYYY-MM-DD'
 
   do {
     const response = await notion.databases.query({
@@ -39,7 +46,7 @@ function getTitleText(titleProp) {
 
 // 새 페이지 생성용 프로퍼티 구성
 function buildNewProperties(original) {
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const today = dayjs().tz('Asia/Seoul').format('YYYY-MM-DD');
   const status = original.상태.select?.name;
   const confirm = status === 'Bad' ? true : false;
 
