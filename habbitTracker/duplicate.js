@@ -1,34 +1,49 @@
 require('dotenv').config();
 const { Client } = require('@notionhq/client');
+const notion = new Client({ auth: process.env.NOTION_API_KEY });
+const databaseId = process.env.DATABASE_ID;
+
+
 const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 const timezone = require('dayjs/plugin/timezone');
-
-const notion = new Client({ auth: process.env.NOTION_API_KEY });
-const databaseId = process.env.DATABASE_ID;
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const getYesterdayKST = () => {
-  return dayjs().tz('Asia/Seoul').subtract(1, 'day').format('YYYY-MM-DD');
-};
+  const yesterdayKST = dayjs().tz('Asia/Seoul').subtract(1, 'day');
+  const start = yesterdayKST.startOf('day').toISOString();
+  const end = yesterdayKST.endOf('day').toISOString();
+  return { start, end };
+}
 
 // 모든 페이지 불러오기
-async function getAllPages() {
+async function getPages() {
   let results = [];
   let cursor;
-  const ymd = getYesterdayKST(); // 'YYYY-MM-DD'
+  const yesterdayRange = getYesterdayKST();
 
   do {
     const response = await notion.databases.query({
       database_id: databaseId,
       start_cursor: cursor,
       filter:{
-        property: '날짜',
-        date: {
-          equals: ymd // 어제 날짜와 일치하는 항목만
-        }
+        and: [
+            {
+              property: '날짜',
+              date: {
+                on_or_after: yesterdayRange.start,
+                on_or_before: yesterdayRange.end,
+              },
+            },
+            {
+              property: '상태', // Notion 속성 이름
+              select: {
+                equals: '고정',
+              },
+            }
+          ],
       }
     });
 
@@ -44,25 +59,39 @@ function getTitleText(titleProp) {
   return titleProp?.title?.map(t => t.plain_text).join('') || '(제목 없음)';
 }
 
+function updateDate(dateProp){
+  if(dateProp === null) return null;
+
+  if(dateProp.includes('T')){
+    const date = dayjs(dateProp);
+    return dayjs().hour(date.hour()).minute(date.minute()).second(date.second());
+  }
+
+  return dayjs().format('YYYY-MM-DD');
+}
+
 // 새 페이지 생성용 프로퍼티 구성
 function buildNewProperties(original) {
-  const today = dayjs().tz('Asia/Seoul').format('YYYY-MM-DD');
+  const todayStart = updateDate(original.날짜.date.start);
+  const todayEnd = updateDate(original.날짜.date.end);
   const status = original.상태.select?.name;
-  const confirm = status === 'Bad' ? true : false;
+  const isHabit = original['습관 구분'].select?.name;
+  const confirm = isHabit === 'Bad' ? true : false;
 
   return {
-    '습관': {
+    '일정': {
       title: [
         {
           text: {
-            content: getTitleText(original.습관)
+            content: getTitleText(original.일정)
           }
         }
       ]
     },
     '날짜': {
       date: {
-        start: today
+        start: todayStart,
+        end: todayEnd
       }
     },
     '상태': {
@@ -72,12 +101,17 @@ function buildNewProperties(original) {
     },
     '확인': {
       checkbox: confirm
+    },
+    '습관 구분': {
+      select:{
+        name: isHabit
+      } 
     }
   };
 }
 
 async function duplicateAllPages() {
-  const pages = await getAllPages();
+  const pages = await getPages();
   console.log(`총 ${pages.length}개 페이지를 복제합니다.`);
 
   for (const page of pages) {
@@ -88,7 +122,7 @@ async function duplicateAllPages() {
       properties: newProps,
     });
 
-    console.log(`복제 완료: ${getTitleText(page.properties.습관)}`);
+    console.log(`복제 완료: ${getTitleText(page.properties.일정)}`);
   }
 }
 
