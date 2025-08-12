@@ -7,121 +7,109 @@ const databaseId = process.env.DATABASE_ID;
 const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 const timezone = require('dayjs/plugin/timezone');
+const isBetween = require('dayjs/plugin/isBetween');
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
+dayjs.extend(isBetween);
 
-const getYesterdayKST = () => {
-  const yesterdayKST = dayjs().tz('Asia/Seoul').subtract(1, 'day');
-  const start = yesterdayKST.startOf('day').toISOString();
-  const end = yesterdayKST.endOf('day').toISOString();
-  return { start, end };
-}
-
-// 모든 페이지 불러오기
 async function getPages() {
-  let results = [];
+  let initialResults = [];
   let cursor;
-  const yesterdayRange = getYesterdayKST();
+
+  // 1단계 (API 필터): 성능을 위해 최근 3일치 데이터만 요청
+  const threeDaysAgo = dayjs().tz('Asia/Seoul').subtract(2, 'day').startOf('day').toISOString();
+
+  console.log(`[1/2] 성능 최적화를 위해 최근 3일치('고정' 상태) 데이터만 가져옵니다...`);
 
   do {
     const response = await notion.databases.query({
       database_id: databaseId,
       start_cursor: cursor,
-      filter:{
+      filter: {
         and: [
-            {
-              property: '날짜',
-              date: {
-                on_or_after: yesterdayRange.start,
-                on_or_before: yesterdayRange.end,
-              },
-            },
-            {
-              property: '상태', // Notion 속성 이름
-              select: {
-                equals: '고정',
-              },
-            }
-          ],
-      }
+          { property: '상태', select: { equals: '고정' } },
+          { property: '날짜', date: { on_or_after: threeDaysAgo } },
+        ]
+      },
     });
-
-    results = results.concat(response.results);
+    initialResults = initialResults.concat(response.results);
     cursor = response.has_more ? response.next_cursor : null;
   } while (cursor);
 
-  return results;
+  console.log(`[2/2] 가져온 ${initialResults.length}개 중 어제 날짜 페이지만 정확히 필터링합니다...`);
+  
+  // 2단계 (코드 필터): 가져온 데이터 중 정확히 어제 날짜만 골라냄
+  const yesterdayStart = dayjs().tz('Asia/Seoul').subtract(1, 'day').startOf('day');
+  const yesterdayEnd = dayjs().tz('Asia/Seoul').subtract(1, 'day').endOf('day');
+
+  const yesterdayPages = initialResults.filter(page => {
+    const pageDateStr = page.properties.날짜.date?.start;
+    if (!pageDateStr) return false;
+    
+    const pageDate = dayjs(pageDateStr); 
+    return pageDate.isBetween(yesterdayStart, yesterdayEnd, null, '[]');
+  });
+
+  return yesterdayPages;
 }
 
-// 제목 파싱 함수
+// 이하 다른 함수들은 이전과 동일합니다.
+
 function getTitleText(titleProp) {
-  return titleProp?.title?.map(t => t.plain_text).join('') || '(제목 없음)';
+  return titleProp?.title?.[0]?.plain_text || '(제목 없음)';
 }
 
 function updateDate(dateProp){
   if(dateProp === null) return null;
-
-  if(dateProp.includes('T')){
-    const date = dayjs(dateProp);
-    return dayjs().hour(date.hour()).minute(date.minute()).second(date.second());
+  const todayKST = dayjs().tz('Asia/Seoul');
+  if(String(dateProp).includes('T')){
+    const originalDate = dayjs(dateProp);
+    return todayKST.hour(originalDate.hour()).minute(originalDate.minute()).second(originalDate.second()).format();
   }
-
-  return dayjs().format('YYYY-MM-DD');
+  return todayKST.format('YYYY-MM-DD');
 }
 
-// 새 페이지 생성용 프로퍼티 구성
 function buildNewProperties(original) {
-  const todayStart = updateDate(original.날짜.date.start);
-  const todayEnd = updateDate(original.날짜.date.end);
-  const status = original.상태.select?.name;
-  const isHabit = original['습관 구분'].select?.name;
-  const confirm = isHabit === 'Bad' ? true : false;
+  const props = original.properties;
+  const newProps = {};
 
-  return {
-    '일정': {
-      title: [
-        {
-          text: {
-            content: getTitleText(original.일정)
-          }
-        }
-      ]
-    },
-    '날짜': {
+  newProps['일정'] = { title: [{ text: { content: getTitleText(props['일정']) } }] };
+  
+  if (props['날짜']?.date?.start) {
+    newProps['날짜'] = {
       date: {
-        start: todayStart,
-        end: todayEnd
-      }
-    },
-    '상태': {
-      select: {
-        name: status
-      }
-    },
-    '확인': {
-      checkbox: confirm
-    },
-    '습관 구분': {
-      select:{
-        name: isHabit
-      } 
-    }
-  };
+        start: updateDate(props['날짜'].date.start),
+        end: updateDate(props['날짜'].date.end),
+      },
+    };
+  }
+
+  if (props['상태']?.select?.name) {
+    newProps['상태'] = { select: { name: props['상태'].select.name } };
+  }
+
+  const habitType = props['습관 구분']?.select?.name;
+  if (habitType) {
+    newProps['습관 구분'] = { select: { name: habitType } };
+    newProps['확인'] = { checkbox: habitType === 'Bad' };
+  } else {
+    newProps['확인'] = { checkbox: false };
+  }
+
+  return newProps;
 }
 
 async function duplicateAllPages() {
   const pages = await getPages();
-  console.log(`총 ${pages.length}개 페이지를 복제합니다.`);
+  console.log(`\n[최종 결과] 복제할 페이지 ${pages.length}개를 확정했습니다.`);
 
   for (const page of pages) {
-    const newProps = buildNewProperties(page.properties);
-
+    const newProps = buildNewProperties(page);
     await notion.pages.create({
       parent: { database_id: databaseId },
       properties: newProps,
     });
-
     console.log(`복제 완료: ${getTitleText(page.properties.일정)}`);
   }
 }
