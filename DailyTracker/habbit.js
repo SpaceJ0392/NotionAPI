@@ -96,7 +96,7 @@ async function duplicateAllPages() {
       parent: { database_id: databaseId },
       properties: newProps,
     });
-    console.log(`복제 완료: ${getTitleText(page.properties.일정)}`);
+    console.log(`복제 완료: ${utils.getTitleText(page.properties.일정)}`);
   }
 }
 

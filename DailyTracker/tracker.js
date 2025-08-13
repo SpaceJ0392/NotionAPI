@@ -1,4 +1,4 @@
-const duplicateHabbitPages = require('./duplicate');
+const duplicateHabbitPages = require('./habbit');
 //const duplicateProcrastinatePages = require('./procrastinate');
 
 // 매일 자정 (00:00)에 실행
