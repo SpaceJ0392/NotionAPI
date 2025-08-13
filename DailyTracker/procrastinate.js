@@ -28,7 +28,8 @@ async function getPages() {
       start_cursor: cursor,
       filter: {
         and: [
-          { property: '상태', select: { equals: '고정' } },
+          { property: '상태', select: { equals: '변동' } },
+          { property: '확인', checkbox: { equals: false } },
           { property: '날짜', date: { on_or_after: threeDaysAgo } },
         ]
       },
@@ -54,8 +55,6 @@ async function getPages() {
   return yesterdayPages;
 }
 
-// 이하 다른 함수들은 이전과 동일합니다.
-
 function getTitleText(titleProp) {
   return titleProp?.title?.[0]?.plain_text || '(제목 없음)';
 }
@@ -70,48 +69,26 @@ function updateDate(dateProp){
   return todayKST.format('YYYY-MM-DD');
 }
 
-function buildNewProperties(original) {
-  const props = original.properties;
-  const newProps = {};
 
-  newProps['일정'] = { title: [{ text: { content: getTitleText(props['일정']) } }] };
-  
-  if (props['날짜']?.date?.start) {
-    newProps['날짜'] = {
-      date: {
-        start: updateDate(props['날짜'].date.start),
-        end: updateDate(props['날짜'].date.end),
-      },
-    };
+(async () => {
+  try {
+    console.log("🚀 스크립트를 시작합니다.");
+    
+    const pages = await getPages(); // 함수를 호출하고 결과를 변수에 저장
+    
+    console.log(`\n✅ 총 ${pages.length}개의 어제 날짜 페이지를 성공적으로 찾았습니다.`);
+
+    // 찾은 페이지들의 제목을 출력하는 예시
+    if (pages.length > 0) {
+      console.log("\n[찾은 페이지 목록]");
+      pages.forEach(page => {
+        const title = page.properties.일정?.title[0]?.plain_text || '제목 없음';
+        console.log(`- ${title} (ID: ${page.id})`);
+        //console.log(JSON.stringify(page, null, 2));
+      });
+    }
+
+  } catch (error) {
+    console.error("❗️ 스크립트 실행 중 오류가 발생했습니다:", error);
   }
-
-  if (props['상태']?.select?.name) {
-    newProps['상태'] = { select: { name: props['상태'].select.name } };
-  }
-
-  const habitType = props['습관 구분']?.select?.name;
-  if (habitType) {
-    newProps['습관 구분'] = { select: { name: habitType } };
-    newProps['확인'] = { checkbox: habitType === 'Bad' };
-  } else {
-    newProps['확인'] = { checkbox: false };
-  }
-
-  return newProps;
-}
-
-async function duplicateAllPages() {
-  const pages = await getPages();
-  console.log(`\n[최종 결과] 복제할 페이지 ${pages.length}개를 확정했습니다.`);
-
-  for (const page of pages) {
-    const newProps = buildNewProperties(page);
-    await notion.pages.create({
-      parent: { database_id: databaseId },
-      properties: newProps,
-    });
-    console.log(`복제 완료: ${getTitleText(page.properties.일정)}`);
-  }
-}
-
-module.exports = duplicateAllPages;
+})();
