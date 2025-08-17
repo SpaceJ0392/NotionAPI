@@ -26,3 +26,4 @@ jobs:
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           DATABASE_ID: ${{ secrets.DATABASE_ID }}
+          DATE_API_KEY: ${{ secrets.DATE_API_KEY }}
