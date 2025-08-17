@@ -26,12 +26,14 @@ async function getSchedulePages() {
       database_id: databaseId,
       start_cursor: cursor,
       filter: {
+        or:[
+            { property: 'Checked', status: { equals: 'in progress'  } },
+            { property: 'Checked', status: { equals: 'Not started'  } }
+        ],
         and: [
-          { property: 'Status', select: { equals: 'Schedule' } },
-          { property: 'Checked', status: { equals: 'in progress'  } },
-          { property: 'Checked', status: { equals: 'Not started'  } },
-          { property: 'Date', date: { on_or_after: yesterdayStartKST } },
-          { property: 'Date', date: { on_or_before: yesterdayEndKST } },
+            { property: 'Status', select: { equals: 'Schedule' } },
+            { property: 'Date', date: { on_or_after: yesterdayStartKST } }, //
+            { property: 'Date', date: { on_or_before: yesterdayEndKST } },
         ]
       },
     });
@@ -43,24 +45,39 @@ async function getSchedulePages() {
 }
 
 async function insertSchedulePages() {
+    const schedulePages = await getSchedulePages();
+    console.log(`\n복제할 페이지 ${schedulePages.length}개.`);
   
+    
+    for (const schedulePage of schedulePages) {
+      const scheduleProp = schedulePage.properties;
+      await notion.pages.create({
+        parent: { database_id: databaseId },
+        properties: {
+          'Checked': { status: scheduleProp.Checked.status },
+          'Status' : { select: scheduleProp.Status.select },
+          'Date' : { date: { start: utils.updateDate(scheduleProp.Date.date?.start) }},
+          'Name' : { title: [ { text: {content : utils.getTitle(scheduleProp.Name)}} ] },
+          'Type' : { select: scheduleProp.Type.select },
+          'DayType' : { multi_select: scheduleProp.DayType?.multi_select }
+        }
+      });
+  
+      console.log(`복제 완료: ${utils.getTitle(schedulePage.properties.Name)}`);
+    }  
 }
 
-(async () => {
-  try {
+// (async () => {
+//   try {
     
-    const pages = await getSchedulePages();
-    console.log(`\n✅ 총 ${pages.length}개`);
+//     await insertSchedulePages();
+//     //const pages = await getSchedulePages();
+//     //console.log(`\n✅ 총 ${pages.length}개`);
+//     //console.log(JSON.stringify(pages, null, 2));
 
-    // 찾은 페이지들의 제목을 출력하는 예시
-    if (pages.length > 0) {
-      console.log("\n[찾은 페이지 목록]");
-      pages.forEach(page => { console.log(`- ${utils.getTitle(page.properties.Name)}`);});
-    }
+//   } catch (error) {
+//     console.error(error);
+//   }
+// })();
 
-  } catch (error) {
-    console.error(error);
-  }
-})();
-
-//module.exports = insertSchedulePages;
+module.exports = insertSchedulePages;

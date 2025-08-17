@@ -15,14 +15,12 @@ const insertSchedulePages = require('./schedule');
     //작업1. 습관 업데이트
     console.log('\n1. 습관 업데이트 시작...');
     await insertHabitPages(flag);
-    console.log('✅ 업데이트 완료.');
-
+    
     // 작업2. 일정 업데이트.
     console.log('\n2. 일정 업데이트 시작...');
-    await insertSchedulePages(); // <-- 새로운 함수를 await로 호출
-
-
-    console.log('\n모든 작업이 성공적으로 완료되었습니다.');
+    await insertSchedulePages(); 
+    
+    console.log('✅ 업데이트 완료.');
   } catch (error) {
     console.error('\n작업 중 오류가 발생했습니다:', error);
   }

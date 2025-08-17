@@ -50,11 +50,11 @@ async function insertHabitPages(flag) {
     await notion.pages.create({
       parent: { database_id: databaseId },
       properties: {
-        'Checked': { status: { name: habitProp.Checked.status.name }},
-        'Status' : { select: { name: habitProp.Status.select.name }},
-        'Date' : { date: { start: utils.updateDate(habitProp.Date.date) }},
+        'Checked': { status: habitProp.Checked.status },
+        'Status' : { select: habitProp.Status.select },
+        'Date' : { date: { start: utils.updateDate(habitProp.Date.date?.start) }},
         'Name' : { title: [ { text: {content : utils.getTitle(habitProp.Name)}} ] },
-        'Type' : { select: { name: habitProp.Type.select.name } },
+        'Type' : { select: habitProp.Type.select },
         'DayType' : { multi_select: habitProp.DayType.multi_select }
       }
     });
@@ -67,7 +67,7 @@ async function insertHabitPages(flag) {
 /* -- test code -- */
 // (async () => {
 //   try {
-//     await createHabitPages(false);
+//     await insertHabitPages(false);
 //   } catch (error) {
 //     console.error(error);
 //   }
