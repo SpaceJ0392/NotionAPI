@@ -1,2 +1,3 @@
 .env
 DailyTracker/test.js
+DailyTracker/**test.js
