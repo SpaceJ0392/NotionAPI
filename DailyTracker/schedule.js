@@ -1,24 +1,15 @@
 require('dotenv').config();
 const { Client } = require('@notionhq/client');
-const dayjs = require('dayjs');
-const utc = require('dayjs/plugin/utc');
-const timezone = require('dayjs/plugin/timezone');
-const isBetween = require('dayjs/plugin/isBetween');
 const utils = require('./utils/util')
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const databaseId = process.env.DATABASE_ID;
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
-dayjs.extend(isBetween);
-
 async function getSchedulePages() {
   let results = [];
   let cursor;
 
-  const yesterdayStartKST = dayjs().tz('Asia/Seoul').subtract(1, 'day').startOf('day').toISOString();
-  const yesterdayEndKST = dayjs().tz('Asia/Seoul').subtract(1, 'day').endOf('day').toISOString();
+  
 
   console.log(`일정 데이터 가져오는 중...`);
   do {
@@ -32,8 +23,8 @@ async function getSchedulePages() {
         ],
         and: [
             { property: 'Status', select: { equals: 'Schedule' } },
-            { property: 'Date', date: { on_or_after: yesterdayStartKST } }, //
-            { property: 'Date', date: { on_or_before: yesterdayEndKST } },
+            { property: 'Date', date: { on_or_after: utils.yesterdayStartKST } }, //
+            { property: 'Date', date: { on_or_before: utils.yesterdayEndKST } },
         ]
       },
     });

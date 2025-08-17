@@ -9,6 +9,8 @@ dayjs.extend(timezone);
 dayjs.extend(isBetween);
 
 const todayKST = dayjs().tz('Asia/Seoul');
+const yesterdayStartKST = dayjs().tz('Asia/Seoul').subtract(1, 'day').startOf('day').toISOString();
+const yesterdayEndKST = dayjs().tz('Asia/Seoul').subtract(1, 'day').endOf('day').toISOString();
 
 function updateDate(dateProp){
 
@@ -25,6 +27,9 @@ function getTitle(titleProp) {
 }
 
 module.exports = {
+  todayKST,
+  yesterdayStartKST,
+  yesterdayEndKST,
   updateDate,
-  getTitle,
+  getTitle
 };

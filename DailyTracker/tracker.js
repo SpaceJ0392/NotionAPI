@@ -1,4 +1,4 @@
-const insertHabitPages = require('./habit');
+const habit = require('./habit');
 const isHoliday = require('./utils/holidayChecker');
 const insertSchedulePages = require('./schedule');
 
@@ -12,12 +12,17 @@ const insertSchedulePages = require('./schedule');
   let flag = isHoliday(logTime);
 
   try {
+
+    console.log('\n1. 어제자 나쁜 습관 In progress => Done 업데이트');
+    await habit.updateBadHabitPagesYesterday();
+    console.log('어제자 나쁜 습관 업데이트 완료')
+
     //작업1. 습관 업데이트
-    console.log('\n1. 습관 업데이트 시작...');
-    await insertHabitPages(flag);
+    console.log('\n2. 습관 업데이트 시작...');
+    await habit.insertHabitPages(flag);
     
     // 작업2. 일정 업데이트.
-    console.log('\n2. 일정 업데이트 시작...');
+    console.log('\n3. 일정 업데이트 시작...');
     await insertSchedulePages(); 
     
     console.log('✅ 업데이트 완료.');
