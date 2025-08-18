@@ -1,17 +1,8 @@
 require('dotenv').config();
-const dayjs = require('dayjs');
-const utc = require('dayjs/plugin/utc');
-const timezone = require('dayjs/plugin/timezone');
-const isBetween = require('dayjs/plugin/isBetween');
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-dayjs.extend(isBetween);
+const utils = require('./util');
 
 const DateAPIKey = process.env.DATE_API_KEY;
-const todayKST = dayjs().tz('Asia/Seoul');
 const holidayCache = {}; // 휴일을 담아 놓는 캐시
-
 
 async function isHoliday(date){
   
@@ -23,10 +14,8 @@ async function isHoliday(date){
   const targetYear = targetDate.getFullYear();
   const targetMonth = targetDate.getMonth() + 1;
   if(!holidayCache[`${targetYear}-${targetMonth}`]){
-    console.log(`${targetYear}-${targetMonth} 의 공휴일 데이터 조회...`)
     holidayCache[`${targetYear}-${targetMonth}`] = await getHolidaysForMonth(targetYear, targetMonth);
   }
-
   const formattedDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`
   return holidayCache[`${targetYear}-${targetMonth}`].has(formattedDate);
 }
@@ -66,5 +55,11 @@ async function getHolidaysForMonth(year, month) {
   
   return holidays;
 }
+
+
+/* --- test code ---*/
+// (async (params) => {
+//   console.log(await isHoliday(utils.todayKST));
+// })();
 
 module.exports = isHoliday;

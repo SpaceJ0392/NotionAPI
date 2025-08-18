@@ -1,3 +1,4 @@
+require('dotenv').config();
 const habit = require('./habit');
 const isHoliday = require('./utils/holidayChecker');
 const insertSchedulePages = require('./schedule');
@@ -9,7 +10,8 @@ const insertSchedulePages = require('./schedule');
   console.log(`[${logTime.format('YYYY-MM-DD HH:mm:ss')}] 🕛 자동 복제 시작`);
 
   // 당일이 공휴일인지 확인.
-  let flag = isHoliday(logTime);
+  let flag = await isHoliday(logTime);
+  flag ? console.log(`${logTime.format('YYYY-MM-DD')} 오늘은 휴일입니다.`) : console.log(`${logTime.format('YYYY-MM-DD')} 오늘은 평일입니다.`);
 
   try {
 

@@ -9,22 +9,20 @@ async function getSchedulePages() {
   let results = [];
   let cursor;
 
-  
-
   console.log(`일정 데이터 가져오는 중...`);
   do {
     const response = await notion.databases.query({
       database_id: databaseId,
       start_cursor: cursor,
       filter: {
-        or:[
-            { property: 'Checked', status: { equals: 'in progress'  } },
-            { property: 'Checked', status: { equals: 'Not started'  } }
-        ],
         and: [
-            { property: 'Status', select: { equals: 'Schedule' } },
-            { property: 'Date', date: { on_or_after: utils.yesterdayStartKST } }, //
-            { property: 'Date', date: { on_or_before: utils.yesterdayEndKST } },
+          { property: 'Status', select: { equals: 'Schedule' } },
+          { property: 'Date', date: { on_or_after: utils.yesterdayStartKST } },
+          { property: 'Date', date: { on_or_before: utils.yesterdayEndKST } },
+          { or:[
+              { property: 'Checked', status: { equals: 'in progress'  } },
+              { property: 'Checked', status: { equals: 'Not started'  } }
+          ] }
         ]
       },
     });
@@ -61,9 +59,9 @@ async function insertSchedulePages() {
 // (async () => {
 //   try {
     
-//     await insertSchedulePages();
-//     //const pages = await getSchedulePages();
-//     //console.log(`\n✅ 총 ${pages.length}개`);
+//     //await insertSchedulePages();
+//     const pages = await getSchedulePages();
+//     console.log(`\n✅ 총 ${pages.length}개`);
 //     //console.log(JSON.stringify(pages, null, 2));
 
 //   } catch (error) {

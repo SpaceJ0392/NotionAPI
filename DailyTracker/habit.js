@@ -69,8 +69,9 @@ async function getBadHabitPagesYesterday() {
           { property: 'Status', select: { equals: 'Habit' } },
           { property: 'Date', date: { on_or_after: utils.yesterdayStartKST } },
           { property: 'Date', date: { on_or_before: utils.yesterdayEndKST } },
-          { property: 'Type', select: { equals: 'Bad' } }
-        ]
+          { property: 'Type', select: { equals: 'Bad' } },
+          { property: 'Checked', status: { does_not_equal: 'Done'} }
+        ],
       },
     });
     results = results.concat(response.results);
@@ -95,7 +96,10 @@ async function updateBadHabitPagesYesterday() {
 /* -- test code -- */
 // (async () => {
 //   try {
-//     await insertHabitPages(false);
+//     const pages = await getBadHabitPagesYesterday();
+//     console.log(JSON.stringify(pages, null, 2));
+
+//     //await insertHabitPages(false);
 //   } catch (error) {
 //     console.error(error);
 //   }
