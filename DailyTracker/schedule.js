@@ -19,52 +19,69 @@ async function getSchedulePages() {
           { property: 'Status', select: { equals: 'Schedule' } },
           { property: 'Date', date: { on_or_after: utils.yesterdayStartKST } },
           { property: 'Date', date: { on_or_before: utils.yesterdayEndKST } },
-          { or:[
-              { property: 'Checked', status: { equals: 'in progress'  } },
-              { property: 'Checked', status: { equals: 'Not started'  } }
-          ] }
+          {
+            or: [
+              { property: 'Checked', status: { equals: 'in progress' } },
+              { property: 'Checked', status: { equals: 'Not started' } }
+            ]
+          }
         ]
       },
     });
     results = results.concat(response.results);
     cursor = response.has_more ? response.next_cursor : null;
   } while (cursor);
-  
+
   return results;
 }
 
+async function getBlockInSchedulePage(schedulePage) {
+  let results = [];
+  let cursor;
+
+  console.log("내용 복제 중...");
+  do {
+    const response = await notion.blocks.children.list({ block_id: schedulePage.id, start_cursor: cursor });
+    results = results.concat(response.results);
+    cursor = response.has_more ? response.next_cursor : null;
+  } while (cursor)
+
+  return results.map(item => ({object: item.object, type: item.type, [item.type] : item[item.type]}));
+}
+
 async function insertSchedulePages() {
-    const schedulePages = await getSchedulePages();
-    console.log(`\n복제할 페이지 ${schedulePages.length}개.`);
-  
-    
-    for (const schedulePage of schedulePages) {
-      //TODO - 여기서 pageID로 Retrieve block children api 호출해서, object랑, type 이름으로 된 데이터만 
-      // 가져와서 아래 create 때, children으로 추가.
-      const scheduleProp = schedulePage.properties;
-      await notion.pages.create({
-        parent: { database_id: databaseId },
-        properties: {
-          'Checked': { status: scheduleProp.Checked.status },
-          'Status' : { select: scheduleProp.Status.select },
-          'Date' : { date: { start: utils.updateDate(scheduleProp.Date.date?.start) }},
-          'Name' : { title: [ { text: {content : utils.getTitle(scheduleProp.Name)}} ] },
-          'Type' : { select: scheduleProp.Type.select },
-          'DayType' : { multi_select: scheduleProp.DayType?.multi_select }
-        }
-        //TODO - children으로 page 안 내용 추가.
-      });
-  
-      console.log(`복제 완료: ${utils.getTitle(schedulePage.properties.Name)}`);
-    }  
+  const schedulePages = await getSchedulePages();
+  console.log(`\n복제할 페이지 ${schedulePages.length}개.`);
+
+
+  for (const schedulePage of schedulePages) {
+    //Block Data 가져오기 - Page마다.
+    const blockData = await getBlockInSchedulePage(schedulePage);
+
+    const scheduleProp = schedulePage.properties;
+    await notion.pages.create({
+      parent: { database_id: databaseId },
+      properties: {
+        'Checked': { status: scheduleProp.Checked.status },
+        'Status': { select: scheduleProp.Status.select },
+        'Date': { date: { start: utils.updateDate(scheduleProp.Date.date?.start) } },
+        'Name': { title: [{ text: { content: utils.getTitle(scheduleProp.Name) } }] },
+        'Type': { select: scheduleProp.Type.select },
+        'DayType': { multi_select: scheduleProp.DayType?.multi_select }
+      },
+      children: blockData
+    });
+
+    console.log(`복제 완료: ${utils.getTitle(schedulePage.properties.Name)}`);
+  }
 }
 
 // (async () => {
 //   try {
-    
-//     //await insertSchedulePages();
-//     const pages = await getSchedulePages();
-//     console.log(`\n✅ 총 ${pages.length}개`);
+
+//     await insertSchedulePages();
+//     //const pages = await getSchedulePages();
+//     //console.log(`\n✅ 총 ${pages.length}개`);
 //     //console.log(JSON.stringify(pages, null, 2));
 
 //   } catch (error) {
