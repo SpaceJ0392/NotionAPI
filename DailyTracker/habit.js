@@ -31,14 +31,19 @@ async function getHabitPages(flag) {
   return results;
 }
 
-
-async function insertHabitPages(flag) {
+async function insertHabitPages(flag, todayDay) {
   const habitPages = await getHabitPages(flag);
-  console.log(`\n복제할 페이지 ${habitPages.length}개.`);
 
-  
   for (const habitPage of habitPages) {
     const habitProp = habitPage.properties;
+
+    //요일 체크
+    const weekDayOnDayType = habitProp.DayType.multi_select
+                             .map(item => item.name).filter(name => name !== 'WeekDay' && name !== 'Holiday');
+    if (weekDayOnDayType.length > 0 && !weekDayOnDayType.includes(utils.dayTypeDict[todayDay])){
+      continue;
+    }
+
     await notion.pages.create({
       parent: { database_id: databaseId },
       properties: {

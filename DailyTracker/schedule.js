@@ -39,6 +39,8 @@ async function insertSchedulePages() {
   
     
     for (const schedulePage of schedulePages) {
+      //TODO - 여기서 pageID로 Retrieve block children api 호출해서, object랑, type 이름으로 된 데이터만 
+      // 가져와서 아래 create 때, children으로 추가.
       const scheduleProp = schedulePage.properties;
       await notion.pages.create({
         parent: { database_id: databaseId },
@@ -50,6 +52,7 @@ async function insertSchedulePages() {
           'Type' : { select: scheduleProp.Type.select },
           'DayType' : { multi_select: scheduleProp.DayType?.multi_select }
         }
+        //TODO - children으로 page 안 내용 추가.
       });
   
       console.log(`복제 완료: ${utils.getTitle(schedulePage.properties.Name)}`);

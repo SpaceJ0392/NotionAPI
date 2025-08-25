@@ -2,12 +2,15 @@ name: Run Notion Scheduler Daily
 
 on:
   schedule:
-    - cron: "0 15 * * *"  # KST 자정
+    - cron: "0 0 * * *"  # KST 자정
   workflow_dispatch:
 
 jobs:
   run:
     runs-on: ubuntu-latest
+
+    env:
+      TZ: 'Asia/Seoul'
 
     steps:
       - name: Checkout repo

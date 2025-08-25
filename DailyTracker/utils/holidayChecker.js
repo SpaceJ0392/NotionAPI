@@ -6,18 +6,17 @@ const holidayCache = {}; // 휴일을 담아 놓는 캐시
 
 async function isHoliday(date){
   
-  const targetDate = date.toDate();
-  const targetDay = targetDate.getDay();
+  const targetDay = date.day();
   if(targetDay === 0 || targetDay === 6) //0: SUN, 6: SAT
     return true;
   
-  const targetYear = targetDate.getFullYear();
-  const targetMonth = targetDate.getMonth() + 1;
+  const targetYear = date.year();
+  const targetMonth = date.month() + 1;
   if(!holidayCache[`${targetYear}-${targetMonth}`]){
     holidayCache[`${targetYear}-${targetMonth}`] = await getHolidaysForMonth(targetYear, targetMonth);
   }
-  const formattedDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`
-  return holidayCache[`${targetYear}-${targetMonth}`].has(formattedDate);
+  const formattedDate = date.format('YYYY-MM-DD');
+  return [holidayCache[`${targetYear}-${targetMonth}`].has(formattedDate), targetDay];
 }
 
 async function getHolidaysForMonth(year, month) {

@@ -10,9 +10,10 @@ const insertSchedulePages = require('./schedule');
   console.log(`[${logTime.format('YYYY-MM-DD HH:mm:ss')}] 🕛 자동 복제 시작`);
 
   // 당일이 공휴일인지 확인.
-  let flag = await isHoliday(logTime);
+  let [flag, todayDay] = await isHoliday(logTime);
   flag ? console.log(`${logTime.format('YYYY-MM-DD')} 오늘은 휴일입니다.`) : console.log(`${logTime.format('YYYY-MM-DD')} 오늘은 평일입니다.`);
 
+  
   try {
 
     console.log('\n1. 어제자 나쁜 습관 In progress => Done 업데이트');
@@ -21,7 +22,7 @@ const insertSchedulePages = require('./schedule');
 
     //작업1. 습관 업데이트
     console.log('\n2. 습관 업데이트 시작...');
-    await habit.insertHabitPages(flag);
+    await habit.insertHabitPages(flag, todayDay);
     
     // 작업2. 일정 업데이트.
     console.log('\n3. 일정 업데이트 시작...');
