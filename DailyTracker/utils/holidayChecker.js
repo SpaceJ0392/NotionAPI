@@ -8,7 +8,7 @@ async function isHoliday(date){
   
   const targetDay = date.day();
   if(targetDay === 0 || targetDay === 6) //0: SUN, 6: SAT
-    return true;
+    return [true, targetDay];
   
   const targetYear = date.year();
   const targetMonth = date.month() + 1;
