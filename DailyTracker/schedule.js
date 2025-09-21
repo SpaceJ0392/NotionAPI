@@ -4,6 +4,7 @@ const utils = require('./utils/util')
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const databaseId = process.env.DATABASE_ID;
+const datasourceId = process.env.DATASOURCE_ID;
 
 async function getSchedulePages() {
   let results = [];
@@ -11,8 +12,8 @@ async function getSchedulePages() {
 
   console.log(`일정 데이터 가져오는 중...`);
   do {
-    const response = await notion.databases.query({
-      database_id: databaseId,
+    const response = await notion.dataSources.query({
+      data_source_id: datasourceId,
       start_cursor: cursor,
       filter: {
         and: [
@@ -60,7 +61,10 @@ async function insertSchedulePages() {
 
     const scheduleProp = schedulePage.properties;
     await notion.pages.create({
-      parent: { database_id: databaseId },
+      parent: { 
+        type: "data_source_id",
+        data_source_id: datasourceId
+      },
       properties: {
         'Checked': { status: scheduleProp.Checked.status },
         'Status': { select: scheduleProp.Status.select },

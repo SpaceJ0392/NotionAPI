@@ -4,7 +4,7 @@ const utils = require('./utils/util.js');
 const { Client } = require('@notionhq/client');
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const databaseId = process.env.DATABASE_ID;
-
+const datasourceId = process.env.DATASOURCE_ID;
 
 async function getHabitPages(flag) {
   let results = [];
@@ -13,8 +13,8 @@ async function getHabitPages(flag) {
   console.log(`습관 데이터 가져오는 중...`);
 
   do {
-    const response = await notion.databases.query({
-      database_id: databaseId,
+    const response = await notion.dataSources.query({
+      data_source_id: datasourceId,
       start_cursor: cursor,
       filter: {
         and: [
@@ -45,7 +45,10 @@ async function insertHabitPages(flag, todayDay) {
     }
 
     await notion.pages.create({
-      parent: { database_id: databaseId },
+      parent: { 
+        type: "data_source_id",
+        data_source_id: datasourceId
+      },
       properties: {
         'Checked': { status: habitProp.Checked.status },
         'Status' : { select: habitProp.Status.select },
@@ -66,8 +69,8 @@ async function getBadHabitPagesYesterday() {
   console.log(`어제자 나쁜 습관 데이터 가져오는 중...`);
 
   do {
-    const response = await notion.databases.query({
-      database_id: databaseId,
+    const response = await notion.dataSources.query({
+      data_source_id: datasourceId,
       start_cursor: cursor,
       filter: {
         and: [
@@ -101,10 +104,10 @@ async function updateBadHabitPagesYesterday() {
 /* -- test code -- */
 // (async () => {
 //   try {
-//     const pages = await getBadHabitPagesYesterday();
-//     console.log(JSON.stringify(pages, null, 2));
+//     // const pages = await getHabitPages();
+//     // console.log(pages.length);
 
-//     //await insertHabitPages(false);
+//     await insertHabitPages(false);
 //   } catch (error) {
 //     console.error(error);
 //   }
