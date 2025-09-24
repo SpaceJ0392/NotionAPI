@@ -89,6 +89,32 @@ async function getBadHabitPagesYesterday() {
   return results;
 }
 
+async function getFailHabitPagesYesterday() {
+  let results = [];
+  let cursor;
+  console.log(`어제자 실패 데이터 가져오는 중...`);
+
+  do {
+    const response = await notion.dataSources.query({
+      data_source_id: datasourceId,
+      start_cursor: cursor,
+      filter: {
+        and: [
+          { property: 'Status', select: { equals: 'Habit' } },
+          { property: 'Date', date: { on_or_after: utils.yesterdayStartKST } },
+          { property: 'Date', date: { on_or_before: utils.yesterdayEndKST } },
+          { property: 'Type', select: { equals: 'Good' } },
+          { property: 'Checked', status: { equals: 'not Started'} }
+        ],
+      },
+    });
+    results = results.concat(response.results);
+    cursor = response.has_more ? response.next_cursor : null;
+  } while (cursor);
+
+  return results;
+}
+
 async function updateBadHabitPagesYesterday() {
     const pages = await getBadHabitPagesYesterday();
     
@@ -98,6 +124,18 @@ async function updateBadHabitPagesYesterday() {
           properties: { 'Checked': { status: { name: 'Done'} } }
       });
       console.log(`어제자 나쁜 습관 업데이트 : ${utils.getTitle(page.properties.Name)}`); 
+    }
+}
+
+async function updateFailHabitPagesYesterday() {
+    const pages = await getFailHabitPagesYesterday();
+    
+    for(const page of pages){ 
+      await notion.pages.update({
+          page_id: page.id,
+          properties: { 'Checked': { status: { name: 'Fail'} } }
+      });
+      console.log(`어제자 실패 습관 업데이트 : ${utils.getTitle(page.properties.Name)}`); 
     }
 }
 
@@ -115,5 +153,6 @@ async function updateBadHabitPagesYesterday() {
 
 module.exports = {
   insertHabitPages,
-  updateBadHabitPagesYesterday
+  updateBadHabitPagesYesterday,
+  updateFailHabitPagesYesterday
 };

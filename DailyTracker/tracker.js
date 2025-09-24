@@ -20,12 +20,16 @@ const insertSchedulePages = require('./schedule');
     await habit.updateBadHabitPagesYesterday();
     console.log('어제자 나쁜 습관 업데이트 완료')
 
+    console.log('\n2. 어제자 하지 못한 습관 Fail 업데이트');
+    await habit.updateFailHabitPagesYesterday();
+    console.log('업데이트 완료')
+
     //작업1. 습관 업데이트
-    console.log('\n2. 습관 업데이트 시작...');
+    console.log('\n3. 습관 업데이트 시작...');
     await habit.insertHabitPages(flag, todayDay);
     
     // 작업2. 일정 업데이트.
-    console.log('\n3. 일정 업데이트 시작...');
+    console.log('\n4. 일정 업데이트 시작...');
     await insertSchedulePages(); 
     
     console.log('✅ 업데이트 완료.');
