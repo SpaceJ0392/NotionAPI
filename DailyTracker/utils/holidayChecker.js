@@ -10,13 +10,17 @@ async function isHoliday(date){
   if(targetDay === 0 || targetDay === 6) //0: SUN, 6: SAT
     return [true, targetDay];
   
-  const targetYear = date.year();
-  const targetMonth = date.month() + 1;
-  if(!holidayCache[`${targetYear}-${targetMonth}`]){
-    holidayCache[`${targetYear}-${targetMonth}`] = await getHolidaysForMonth(targetYear, targetMonth);
-  }
-  const formattedDate = date.format('YYYY-MM-DD');
-  return [holidayCache[`${targetYear}-${targetMonth}`].has(formattedDate), targetDay];
+
+  // **임시 처리 -> 공휴일 API 복구 중 (정부 데이터 센터 화재 문제로 보임.)**
+  // const targetYear = date.year();
+  // const targetMonth = date.month() + 1;
+  // if(!holidayCache[`${targetYear}-${targetMonth}`]){
+  //   holidayCache[`${targetYear}-${targetMonth}`] = await getHolidaysForMonth(targetYear, targetMonth);
+  // }
+  // const formattedDate = date.format('YYYY-MM-DD');
+  // return [holidayCache[`${targetYear}-${targetMonth}`].has(formattedDate), targetDay];
+
+  return [false, targetDay];
 }
 
 async function getHolidaysForMonth(year, month) {

@@ -12,6 +12,7 @@ const todayKST = dayjs().tz('Asia/Seoul');
 const yesterdayStartKST = dayjs().tz('Asia/Seoul').subtract(1, 'day').startOf('day').toISOString();
 const yesterdayEndKST = dayjs().tz('Asia/Seoul').subtract(1, 'day').endOf('day').toISOString();
 const dayTypeDict = { 0:'Sun', 1:'Mon', 2:'Tue', 3:'Wed', 4:'Thur', 5:'Fri', 6:'Sat' };
+const DAILY = 'Daily';
 
 function updateDate(dateProp){
 
@@ -32,6 +33,7 @@ module.exports = {
   yesterdayStartKST,
   yesterdayEndKST,
   dayTypeDict,
+  DAILY,
   updateDate,
   getTitle
 };

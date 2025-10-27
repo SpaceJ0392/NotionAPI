@@ -1,5 +1,5 @@
 require('dotenv').config();
-const habit = require('./habit');
+const daily = require('./daily');
 const isHoliday = require('./utils/holidayChecker');
 const insertSchedulePages = require('./schedule');
 
@@ -17,16 +17,16 @@ const insertSchedulePages = require('./schedule');
   try {
 
     console.log('\n1. 어제자 나쁜 습관 In progress => Done 업데이트');
-    await habit.updateBadHabitPagesYesterday();
+    await daily.updateDailyPagesYesterday('Bad', 'Done');
     console.log('어제자 나쁜 습관 업데이트 완료')
 
     console.log('\n2. 어제자 하지 못한 습관 Fail 업데이트');
-    await habit.updateFailHabitPagesYesterday();
+    await daily.updateDailyPagesYesterday('Good', 'Fail');
     console.log('업데이트 완료')
 
     //작업1. 습관 업데이트
     console.log('\n3. 습관 업데이트 시작...');
-    await habit.insertHabitPages(flag, todayDay);
+    await daily.insertDailyPages(flag, todayDay);
     
     // 작업2. 일정 업데이트.
     console.log('\n4. 일정 업데이트 시작...');
