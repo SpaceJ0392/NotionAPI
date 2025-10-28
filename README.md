@@ -16,4 +16,5 @@ Notion 페이지 자동화 관리를 위한 API.
   - Update! 어제자 수행하지 못한 습관 데이터 Fail 처리.
   - Refactoring -> 작업 목적에 맞는 함수 이름 변경 및 API 유사 작업 코드 통합.
   - Fixed -> 공휴일 API 데이터센터 화재로 인한 복구 중... 임시 코드 처리.
+  - Refactoring -> 함수 호출 중복 최적화 처리 (getDailyPagesYesterday call).
   
