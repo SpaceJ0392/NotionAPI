@@ -92,8 +92,7 @@ async function getDailyPagesYesterday(target, st) {
 
 //target -> Bad or Good
 async function updateDailyPagesYesterday(target, st) {
-    const pages = target === 'Bad' ? await getDailyPagesYesterday(target, 'Done') 
-                  : await getDailyPagesYesterday(target, 'Done');
+    const pages = await getDailyPagesYesterday(target, 'Done');
     
     for(const page of pages){ 
       await notion.pages.update({

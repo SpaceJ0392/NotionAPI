@@ -36,7 +36,7 @@ async function getSchedulePages() {
   return results;
 }
 
-async function getBlockInSchedulePage(schedulePage) {
+async function getBlockInPage(schedulePage) {
   let results = [];
   let cursor;
 
@@ -57,7 +57,7 @@ async function insertSchedulePages() {
 
   for (const schedulePage of schedulePages) {
     //Block Data 가져오기 - Page마다.
-    const blockData = await getBlockInSchedulePage(schedulePage);
+    const blockData = await getBlockInPage(schedulePage);
 
     const scheduleProp = schedulePage.properties;
     await notion.pages.create({
