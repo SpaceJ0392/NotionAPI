@@ -25,7 +25,7 @@ jobs:
         run: npm install
 
       - name: Run Notion Script
-        run: node DailyTracker/tracker.js
+        run: node scheduler_renewal/main.js
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           DATABASE_ID: ${{ secrets.DATABASE_ID }}
