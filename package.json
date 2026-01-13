@@ -1,4 +1,6 @@
 {
+  "type": "module",
+  
   "dependencies": {
     "@notionhq/client": "^5.1.0",
     "dayjs": "^1.11.13",
